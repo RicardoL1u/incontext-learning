@@ -25,7 +25,7 @@ model = BertModel.from_pretrained("bert-base-uncased")
 
 k = 10
 match_idx = []
-for data in tqdm(test_dataset[:10]):
+for data in tqdm(test_dataset[:]):
     encoded_input = tokenizer(data['input'],
         return_tensors='pt',
         max_length=512,
