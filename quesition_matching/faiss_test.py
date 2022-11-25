@@ -5,12 +5,14 @@ from transformers import BertModel, BertTokenizer
 from tqdm import tqdm
 dim = 768
 
-input_path = '/data/lyt/exp/single/new'
-with open('question_embs.npy','rb') as f:
+input_path = '/data/lyt/exp/single/company'
+output_file = 'match_idx_company.json'
+with open('question_embs_company.npy','rb') as f:
     question_embs = np.load(f)
 
 train_dataset = json.load(open(os.path.join(input_path,'train.json')))
 test_dataset = json.load(open(os.path.join(input_path,'test.json')))
+# test_dataset = json.load(open('probs.json'))
 
 
 import faiss
@@ -26,17 +28,16 @@ model = BertModel.from_pretrained("bert-base-uncased")
 k = 10
 match_idx = []
 for data in tqdm(test_dataset[:]):
-    encoded_input = tokenizer(data['input'],
+    encoded_input = tokenizer(
+        text=data['context'],
+        text_pair=data['question'],
         return_tensors='pt',
         max_length=512,
-        truncation=True,
+        truncation='only_first',
         padding='max_length'
     )
     output = model(**encoded_input)
     D, I = gpu_index_flat.search(output[1].detach().numpy(), k)
     match_idx.append(I[0].tolist())
-print(match_idx)
-print(len(match_idx))
-# match_idx = np.array(match_idx)
-with open('match_idx.json','w') as f:
+with open(output_file,'w') as f:
     json.dump(match_idx,f,indent=4)
